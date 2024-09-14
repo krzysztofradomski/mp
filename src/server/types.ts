@@ -1,12 +1,15 @@
 import WebSocket from "ws";
-export enum ItemType {
-  Red = "red",
-  Green = "green",
-  Blue = "blue",
-  Pink = "pink",
-  Orange = "orange",
-  Yellow = "yellow",
-}
+
+export const itemTypes = [
+  "red",
+  "green",
+  "blue",
+  "yellow",
+  "pink",
+  "orange",
+  null,
+] as const;
+export type ItemType = (typeof itemTypes)[number];
 
 export type Cell = [number, number];
 export type Board = ItemType[][];

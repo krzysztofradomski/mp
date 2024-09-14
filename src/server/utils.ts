@@ -1,4 +1,4 @@
-import { Board, ItemType } from "./types";
+import { Board, ItemType, itemTypes } from "./types";
 
 export function createEmptyBoard(): Board {
   return Array(4)
@@ -11,6 +11,7 @@ export function createEmptyBoard(): Board {
 }
 
 export function getRandomItemType(): ItemType {
-  const types = Object.values(ItemType);
+  const types = Object.values(itemTypes).filter(Boolean);
+  console.log({ types });
   return types[Math.floor(Math.random() * types.length)];
 }

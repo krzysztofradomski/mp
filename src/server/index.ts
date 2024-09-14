@@ -174,8 +174,8 @@ export class GameController implements IGameController {
     console.log("Processing move", move, fromItem, toItem);
 
     if (fromItem === toItem) {
-      game.board[toRow][toCol] = fromItem;
-      game.board[fromRow][fromCol] = getRandomItemType();
+      game.board[toRow][toCol] = null;
+      game.board[fromRow][fromCol] = null;
       const player = game.players.find((p) => p.id === move.playerId);
       if (player) {
         player.score += 10;
