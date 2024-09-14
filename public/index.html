@@ -63,9 +63,23 @@
 
       const baseUrl = window.location.origin;
 
-      const TILE_TYPES = ["red", "green", "blue", "pink", "orange", "yellow"];
+      const grid = 4;
 
-      const pixiContainer = document.getElementById("pixiContainer");
+      const tileTextures = [
+        { type: "red", url: `${baseUrl}/assets/tile-red.svg` },
+        { type: "green", url: `${baseUrl}/assets/tile-green.svg` },
+        { type: "blue", url: `${baseUrl}/assets/tile-blue.svg` },
+        { type: "pink", url: `${baseUrl}/assets/tile-pink.svg` },
+        { type: "orange", url: `${baseUrl}/assets/tile-orange.svg` },
+        { type: "yellow", url: `${baseUrl}/assets/tile-yellow.svg` },
+      ];
+
+      const otherTextures = [
+        { type: "win-bg", url: `${baseUrl}/assets/win-bg.svg` },
+        { type: "win-text", url: `${baseUrl}/assets/win-text.svg` },
+        { type: "fail-bg", url: `${baseUrl}/assets/fail-bg.svg` },
+        { type: "fail-text", url: `${baseUrl}/assets/fail-text.svg` },
+      ];
 
       let socket;
       let playerId;
@@ -75,7 +89,9 @@
       let selectedTile = null;
       let app;
       let tiles = [];
-      let tileTextures = {};
+      let minDimension;
+
+      const pixiContainer = document.getElementById("pixiContainer");
 
       function loadScript(url) {
         return new Promise((resolve, reject) => {
@@ -93,6 +109,7 @@
             "https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.3.4/pixi.min.js"
           );
           await loadTileTextures();
+          await loadOtherTextures();
           connectWebSocket();
         } catch (error) {
           console.error("Failed to load resources:", error);
@@ -101,23 +118,55 @@
       }
 
       async function loadTileTextures() {
-        for (const type of TILE_TYPES) {
-          const tileUrl = `${baseUrl}/assets/tile-${type}.svg`; // Added dynamic URL
+        for (const tile of tileTextures) {
           try {
-            const texture = await PIXI.Assets.load(tileUrl);
-            // tileTextures[type] = PIXI.Texture.from(texture);
-            tileTextures[type] = texture;
-            console.log(
-              "Loaded texture for tile type:",
-              type,
-              tileUrl,
-              texture
-            );
+            const texture = await PIXI.Assets.load(tile.url);
+            tileTextures[tile.type] = texture;
           } catch (error) {
-            console.error(`Failed to load texture for ${type}:`, error);
+            console.error(`Failed to load texture for ${tile.type}:`, error);
           }
         }
         console.log("Tile textures loaded:", tileTextures);
+      }
+
+      async function loadOtherTextures() {
+        for (const tex of otherTextures) {
+          try {
+            const texture = await PIXI.Assets.load(tex.url);
+            otherTextures[tex.type] = texture;
+          } catch (error) {
+            console.error(`Failed to load texture for ${tex.type}:`, error);
+          }
+        }
+        console.log("Other textures loaded:", otherTextures);
+      }
+
+      function showWinScreen() {
+        const winBg = new PIXI.Sprite(otherTextures["win-bg"]);
+        winBg.width = app.screen.width;
+        winBg.height = app.screen.height;
+        app.stage.addChild(winBg);
+
+        const winText = new PIXI.Sprite(otherTextures["win-text"]);
+        winText.width = app.screen.width / 2;
+        winText.height = app.screen.height / 2;
+        winText.x = (app.screen.width - winText.width) / 2;
+        winText.y = (app.screen.height - winText.height) / 2;
+        app.stage.addChild(winText);
+      }
+
+      function showFailScreen() {
+        const failBg = new PIXI.Sprite(otherTextures["fail-bg"]);
+        failBg.width = app.screen.width;
+        failBg.height = app.screen.height;
+        app.stage.addChild(failBg);
+
+        const failText = new PIXI.Sprite(otherTextures["fail-text"]);
+        failText.width = app.screen.width / 2;
+        failText.height = app.screen.height / 2;
+        failText.x = (app.screen.width - failText.width) / 2;
+        failText.y = (app.screen.height - failText.height) / 2;
+        app.stage.addChild(failText);
       }
 
       function connectWebSocket() {
@@ -204,16 +253,14 @@
         try {
           app = new PIXI.Application();
 
-          await app.init({ background: "yellow", resizeTo: window });
+          await app.init({
+            backgroundAlpha: 0,
+            resizeTo: window,
+          });
 
           if (pixiContainer) {
             pixiContainer.appendChild(app.view);
-            // pixiContainer.style.width = `${window.innerWidth - 50}px`;
-            // pixiContainer.style.height = `${window.innerHeight - 50}px`;
-            // app.renderer.resize(
-            //   window.innerWidth - 50,
-            //   window.innerHeight - 50
-            // );
+            minDimension = Math.min(app.screen.width, app.screen.height);
           } else {
             throw new Error("Pixi.js container not found");
           }
@@ -232,12 +279,12 @@
         }
         app.stage.removeChildren();
         tiles = [];
-        const minDimension = Math.min(app.screen.width, app.screen.height);
+
         const tileSize = minDimension / 5;
         const padding = tileSize / 7;
 
-        const boardWidth = board.length * (tileSize + padding) - padding;
-        const boardHeight = board.length * (tileSize + padding) - padding;
+        const boardWidth = grid * (tileSize + padding) - padding;
+        const boardHeight = grid * (tileSize + padding) - padding;
         console.log({ board, tileSize, padding, boardWidth, boardHeight });
         pixiContainer.style.width = boardWidth;
         pixiContainer.style.height = boardWidth;
@@ -252,7 +299,6 @@
             let sprite;
             if (Boolean(cell) === false) {
               sprite = new PIXI.Sprite();
-              // make sprite transparent
               sprite.alpha = 0;
               sprite.width = tileSize;
               sprite.height = tileSize;
@@ -264,6 +310,10 @@
               sprite.height = tileSize;
               sprite.x = colIndex * (tileSize + padding);
               sprite.y = rowIndex * (tileSize + padding);
+              const graphics = new PIXI.Graphics();
+              graphics.rect(sprite.x, sprite.y, tileSize, tileSize);
+              graphics.stroke({ width: 10, color: 0xffbd01 });
+              app.stage.addChild(graphics);
               sprite.eventMode = "static";
               sprite.cursor = "pointer";
               sprite.on("pointerdown", () =>
@@ -370,7 +420,11 @@
             Object.keys(gameOverData.finalScores).find((id) => id !== playerId)
           ]
         }`;
-        document.getElementById("gameContainer").style.display = "none";
+        if (winnerId === playerId) {
+          showWinScreen();
+        } else {
+          showFailScreen();
+        }
       }
 
       function showError(errorMessage) {

@@ -1,8 +1,7 @@
 import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
-import path from "path";
 import { createMessage, MESSAGE_TYPES } from "../shared/messages";
-import { createEmptyBoard, getRandomItemType } from "./utils";
+import { createEmptyBoard } from "./utils";
 import { Player, Move, Game, Board, IGameController } from "./types";
 
 export class GameController implements IGameController {
@@ -117,7 +116,7 @@ export class GameController implements IGameController {
       players: [player1, player2],
       board: createEmptyBoard(),
       lastUpdateTime: Date.now(),
-      endTime: Date.now() + 600000, // Game ends 60 seconds from now
+      endTime: Date.now() + 60000, // Game ends 60 seconds from now
     };
     this.games.set(gameId, game);
     this.moveBuffer.set(gameId, []);
@@ -283,23 +282,19 @@ export class GameController implements IGameController {
     const [fromRow, fromCol] = fromCell;
     const [toRow, toCol] = toCell;
 
-    // Check if cells are within the board
-    // if (
-    //   fromRow < 0 ||
-    //   fromRow >= 4 ||
-    //   fromCol < 0 ||
-    //   fromCol >= 4 ||
-    //   toRow < 0 ||
-    //   toRow >= 4 ||
-    //   toCol < 0 ||
-    //   toCol >= 4
-    // ) {
-    //   return false;
-    // }
+    if (
+      fromRow < 0 ||
+      fromRow >= 4 ||
+      fromCol < 0 ||
+      fromCol >= 4 ||
+      toRow < 0 ||
+      toRow >= 4 ||
+      toCol < 0 ||
+      toCol >= 4
+    ) {
+      return false;
+    }
 
-    return true;
-
-    // Check if cells are adjacent
     const rowDiff = Math.abs(fromRow - toRow);
     const colDiff = Math.abs(fromCol - toCol);
     if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
