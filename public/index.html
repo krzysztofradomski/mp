@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multiplayer Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-image: url(/assets/bg.svg);
+        background-size: cover;
+        overflow: hidden;
+      }
+      #gameContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #playerInfo,
+      #scores,
+      #timeRemaining {
+        margin: 10px 0;
+      }
+      #pixiContainer {
+        margin: 0 auto;
+        padding: 0;
+        max-width: calc(100vw - 100px);
+        max-height: calc(100vh - 100px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer" style="display: none">
+      <h1 id="playerInfo"></h1>
+      <div id="scores"></div>
+      <div id="timeRemaining"></div>
+      <div id="pixiContainer"></div>
+    </div>
+    <div id="queueInfo" style="display: none">
+      <p>You are in queue. Position: <span id="queuePosition"></span></p>
+    </div>
+    <div id="loginForm">
+      <input type="text" id="playerName" placeholder="Enter your name" />
+      <button onclick="joinGame()">Join Game</button>
+    </div>
+    <div id="messages"></div>
+
+    <script>
+      const MESSAGE_TYPES = {
+        QUEUE_UPDATE: "queueUpdate",
+        GAME_START: "gameStart",
+        GAME_UPDATE: "update",
+        MERGE: "merge",
+        SWAP: "swap",
+        GAME_OVER: "gameOver",
+        ERROR: "error",
+        RECONNECT_SUCCESS: "reconnectSuccess",
+        RECONNECT_FAILED: "reconnectFailed",
+      };
+
+      const baseUrl = window.location.origin;
+
+      const TILE_TYPES = ["red", "green", "blue", "pink", "orange", "yellow"];
+
+      const pixiContainer = document.getElementById("pixiContainer");
+
+      let socket;
+      let playerId;
+      let playerName;
+      let opponentName;
+      let opponentId;
+      let selectedTile = null;
+      let app;
+      let tiles = [];
+      let tileTextures = {};
+
+      function loadScript(url) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = url;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      async function initGame() {
+        try {
+          await loadScript(
+            "https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.3.4/pixi.min.js"
+          );
+          await loadTileTextures();
+          connectWebSocket();
+        } catch (error) {
+          console.error("Failed to load resources:", error);
+          showError("Failed to load game resources. Please refresh the page.");
+        }
+      }
+
+      async function loadTileTextures() {
+        for (const type of TILE_TYPES) {
+          const tileUrl = `${baseUrl}/assets/tile-${type}.svg`; // Added dynamic URL
+          try {
+            const texture = await PIXI.Assets.load(tileUrl);
+            // tileTextures[type] = PIXI.Texture.from(texture);
+            tileTextures[type] = texture;
+            console.log(
+              "Loaded texture for tile type:",
+              type,
+              tileUrl,
+              texture
+            );
+          } catch (error) {
+            console.error(`Failed to load texture for ${type}:`, error);
+          }
+        }
+        console.log("Tile textures loaded:", tileTextures);
+      }
+
+      function connectWebSocket() {
+        const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = `${wsProtocol}://${window.location.host}/ws`;
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          console.log("WebSocket connection established");
+        };
+
+        socket.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          handleMessage(message);
+        };
+
+        socket.onclose = () => {
+          console.log("WebSocket connection closed");
+          setTimeout(connectWebSocket, 3000);
+        };
+      }
+
+      function handleMessage(message) {
+        switch (message.type) {
+          case MESSAGE_TYPES.QUEUE_UPDATE:
+            updateQueuePosition(message.position);
+            break;
+          case MESSAGE_TYPES.GAME_START:
+            startGame(message);
+            break;
+          case MESSAGE_TYPES.GAME_UPDATE:
+            updateGame(message);
+            break;
+          case MESSAGE_TYPES.MERGE:
+            handleMerge(message);
+            break;
+          case MESSAGE_TYPES.SWAP:
+            handleSwap(message);
+            break;
+          case MESSAGE_TYPES.GAME_OVER:
+            endGame(message);
+            break;
+          case MESSAGE_TYPES.ERROR:
+            showError(message.message);
+            break;
+          case MESSAGE_TYPES.RECONNECT_SUCCESS:
+            handleReconnectSuccess();
+            break;
+          case MESSAGE_TYPES.RECONNECT_FAILED:
+            handleReconnectFailed();
+            break;
+        }
+      }
+
+      function joinGame() {
+        playerName = document.getElementById("playerName").value;
+        if (playerName) {
+          socket.send(JSON.stringify({ type: "join", name: playerName }));
+          document.getElementById("loginForm").style.display = "none";
+          document.getElementById("queueInfo").style.display = "block";
+        }
+      }
+
+      function updateQueuePosition(position) {
+        document.getElementById("queuePosition").textContent = position;
+      }
+
+      async function startGame(gameData) {
+        document.getElementById("queueInfo").style.display = "none";
+        document.getElementById("gameContainer").style.display = "block";
+        playerId = gameData.players.find((p) => p.name === playerName).id;
+        opponentName = gameData.players.find((p) => p.id !== playerId).name;
+        opponentId = gameData.players.find((p) => p.id !== playerId).id;
+        document.getElementById(
+          "playerInfo"
+        ).textContent = `Welcome, ${playerName}!`;
+        await initPixiApp();
+        renderBoard(gameData.board);
+        updateScores(gameData.scores || {});
+        startTimer(gameData.endTime);
+      }
+
+      async function initPixiApp() {
+        try {
+          app = new PIXI.Application();
+
+          await app.init({ background: "yellow", resizeTo: window });
+
+          if (pixiContainer) {
+            pixiContainer.appendChild(app.view);
+            // pixiContainer.style.width = `${window.innerWidth - 50}px`;
+            // pixiContainer.style.height = `${window.innerHeight - 50}px`;
+            // app.renderer.resize(
+            //   window.innerWidth - 50,
+            //   window.innerHeight - 50
+            // );
+          } else {
+            throw new Error("Pixi.js container not found");
+          }
+        } catch (error) {
+          console.error("Failed to initialize Pixi.js application:", error);
+          showError(
+            "Failed to initialize game board. Please refresh the page."
+          );
+        }
+      }
+
+      function renderBoard(board) {
+        if (!app || !app.stage) {
+          console.error("Pixi.js application not initialized");
+          return;
+        }
+        app.stage.removeChildren();
+        tiles = [];
+        const minDimension = Math.min(app.screen.width, app.screen.height);
+        const tileSize = minDimension / 5;
+        const padding = tileSize / 7;
+
+        const boardWidth = board.length * (tileSize + padding) - padding;
+        const boardHeight = board.length * (tileSize + padding) - padding;
+        console.log({ board, tileSize, padding, boardWidth, boardHeight });
+        pixiContainer.style.width = boardWidth;
+        pixiContainer.style.height = boardWidth;
+        app.renderer.resize(boardWidth, boardWidth);
+
+        const startX = (app.screen.width - boardWidth) / 2;
+        const startY = (app.screen.height - boardHeight) / 2;
+
+        board.forEach((row, rowIndex) => {
+          row.forEach((cell, colIndex) => {
+            console.log({ rowIndex, colIndex, cell });
+            let sprite;
+            if (Boolean(cell) === false) {
+              sprite = new PIXI.Sprite();
+              // make sprite transparent
+              sprite.alpha = 0;
+              sprite.width = tileSize;
+              sprite.height = tileSize;
+              sprite.x = colIndex * (tileSize + padding);
+              sprite.y = rowIndex * (tileSize + padding);
+            } else {
+              sprite = PIXI.Sprite.from(tileTextures[cell]);
+              sprite.width = tileSize;
+              sprite.height = tileSize;
+              sprite.x = colIndex * (tileSize + padding);
+              sprite.y = rowIndex * (tileSize + padding);
+              sprite.eventMode = "static";
+              sprite.cursor = "pointer";
+              sprite.on("pointerdown", () =>
+                handleTileClick(rowIndex, colIndex)
+              );
+            }
+            app.stage.addChild(sprite);
+            tiles.push(sprite);
+          });
+        });
+      }
+
+      function handleTileClick(row, col) {
+        if (selectedTile === null) {
+          selectedTile = [row, col];
+          tiles[row * 4 + col].tint = 0xdddddd; // Slightly darken the selected tile
+        } else {
+          // Reset the previously selected tile before moving
+          tiles[selectedTile[0] * 4 + selectedTile[1]].tint = 0xffffff;
+
+          const move = {
+            type: "move",
+            fromCell: selectedTile,
+            toCell: [row, col],
+          };
+          socket.send(JSON.stringify(move));
+
+          selectedTile = null;
+        }
+      }
+
+      function updateGame(gameData) {
+        renderBoard(gameData.board);
+        updateScores(gameData.scores);
+        updateTimer(gameData.timeRemaining);
+      }
+
+      function updateScores(scores) {
+        console.log({
+          scores,
+          playerId,
+          opponentId,
+        });
+
+        const scoresDiv = document.getElementById("scores");
+        scoresDiv.innerHTML = `
+                ${playerName}: ${scores[playerId] || 0} | 
+                ${opponentName}: ${scores[opponentId] || 0}
+            `;
+      }
+
+      function startTimer(endTime) {
+        function updateRemainingTime() {
+          const now = Date.now();
+          const remaining = Math.max(0, endTime - now);
+          updateTimer(remaining);
+          if (remaining > 0) {
+            requestAnimationFrame(updateRemainingTime);
+          }
+        }
+        requestAnimationFrame(updateRemainingTime);
+      }
+
+      function updateTimer(timeRemaining) {
+        const timeRemainingDiv = document.getElementById("timeRemaining");
+        timeRemainingDiv.textContent = `Time remaining: ${Math.ceil(
+          timeRemaining / 1000
+        )}s`;
+      }
+
+      function handleMerge(mergeData) {
+        const { fromCell, toCell } = mergeData;
+        const fromIndex = fromCell[0] * 4 + fromCell[1];
+        const toIndex = toCell[0] * 4 + toCell[1];
+        tiles[fromIndex].alpha = 0.5;
+        tiles[toIndex].alpha = 0.5;
+        setTimeout(() => {
+          tiles[fromIndex].alpha = 1;
+          tiles[toIndex].alpha = 1;
+        }, 300);
+      }
+
+      function handleSwap(swapData) {
+        const { fromCell, toCell } = swapData;
+        const fromIndex = fromCell[0] * 4 + fromCell[1];
+        const toIndex = toCell[0] * 4 + toCell[1];
+        const tempPosition = { x: tiles[fromIndex].x, y: tiles[fromIndex].y };
+        tiles[fromIndex].x = tiles[toIndex].x;
+        tiles[fromIndex].y = tiles[toIndex].y;
+        tiles[toIndex].x = tempPosition.x;
+        tiles[toIndex].y = tempPosition.y;
+      }
+
+      function endGame(gameOverData) {
+        const messages = document.getElementById("messages");
+        const winnerId = gameOverData.winner;
+        const winnerName = winnerId === playerId ? playerName : opponentName;
+        messages.innerHTML = `Game Over! Winner: ${winnerName}. 
+                                  Scores: ${playerName}: ${
+          gameOverData.finalScores[playerId]
+        }, 
+                                  ${opponentName}: ${
+          gameOverData.finalScores[
+            Object.keys(gameOverData.finalScores).find((id) => id !== playerId)
+          ]
+        }`;
+        document.getElementById("gameContainer").style.display = "none";
+      }
+
+      function showError(errorMessage) {
+        const messages = document.getElementById("messages");
+        messages.innerHTML = `Error: ${errorMessage}`;
+      }
+
+      initGame();
+    </script>
+  </body>
+</html>
