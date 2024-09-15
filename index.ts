@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import WebSocket from "ws";
+import cors from "cors";
 import { handleConnection } from "./src/server/connection/handleConnection";
 
 const PORT = process.env.PORT || 3000;
@@ -8,6 +9,10 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+
+// if (process.env.NODE_ENV === "development") {
+app.use(cors());
+// }
 
 app.use(express.static("public"));
 
