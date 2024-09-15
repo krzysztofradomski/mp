@@ -7,10 +7,13 @@ import { GameController } from "../game/index";
 const gameController = new GameController();
 
 export function handleConnection(ws: WebSocket) {
+  // this needs to be improved somewhat, to store the socket's who-am-i-player
+  // and game id in a more reasonable way, but for now it's fine
   let player: Player | null = null;
   let currentGameId: string | null = null;
 
   ws.on("message", (message: string) => {
+    console.log("Received message:", message);
     try {
       const data = JSON.parse(message);
       console.log({ data, player, currentGameId });
@@ -59,6 +62,7 @@ export function handleConnection(ws: WebSocket) {
       score: 0,
     };
     player && gameController.addToQueue(player);
+    console.log("Player joined:", player);
   }
 
   function handleMove(data: any) {
