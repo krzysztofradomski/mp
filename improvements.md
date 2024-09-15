@@ -1,5 +1,6 @@
 Potential improvements:
 
+- fix shared types, type narrowing for messages
 - make new tiles appear during the game, to fill the gaps made by merging
 - swap edge case bugs tbc
 - fix reconnecting to the game after a disconnect
