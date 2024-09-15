@@ -1,8 +1,8 @@
 import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { Player } from "../types";
-import { createMessage, MESSAGE_TYPES } from "../../shared/messages";
-import { GameController } from "../index";
+import { createMessage, MESSAGE_TYPES } from "../messages";
+import { GameController } from "../game/index";
 
 const gameController = new GameController();
 

@@ -1,7 +1,9 @@
 Potential improvements:
 
-- rate limiting of the web socket connection
-- game room plus spectator mode
+- make new tiles appear during the game, to fill the gaps made by merging
+- swap edge case bugs tbc
+- fix reconnecting to the game after a disconnect
 - logging of game events and errors
 - better error handling
-- fix reconnecting to the game after a disconnect
+- rate limiting of the web socket connection
+- game rooms with multiple players / spectators
