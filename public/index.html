@@ -90,6 +90,7 @@
       let app;
       let tiles = [];
       let minDimension;
+      let prefferedWidth;
 
       const pixiContainer = document.getElementById("pixiContainer");
 
@@ -285,6 +286,7 @@
 
         const boardWidth = grid * (tileSize + padding) - padding;
         const boardHeight = grid * (tileSize + padding) - padding;
+        prefferedWidth = boardWidth;
         console.log({ board, tileSize, padding, boardWidth, boardHeight });
         pixiContainer.style.width = boardWidth;
         pixiContainer.style.height = boardWidth;
@@ -329,9 +331,8 @@
       function handleTileClick(row, col) {
         if (selectedTile === null) {
           selectedTile = [row, col];
-          tiles[row * 4 + col].tint = 0xdddddd; // Slightly darken the selected tile
+          tiles[row * 4 + col].tint = 0xdddddd;
         } else {
-          // Reset the previously selected tile before moving
           tiles[selectedTile[0] * 4 + selectedTile[1]].tint = 0xffffff;
 
           const move = {
@@ -360,9 +361,9 @@
 
         const scoresDiv = document.getElementById("scores");
         scoresDiv.innerHTML = `
-                ${playerName}: ${scores[playerId] || 0} | 
-                ${opponentName}: ${scores[opponentId] || 0}
-            `;
+            ${playerName}: ${scores[playerId] || 0} |
+            ${opponentName}: ${scores[opponentId] || 0}
+        `;
       }
 
       function startTimer(endTime) {
@@ -382,6 +383,22 @@
         timeRemainingDiv.textContent = `Time remaining: ${Math.ceil(
           timeRemaining / 1000
         )}s`;
+
+        const scoreBarOutline = new PIXI.Graphics();
+        scoreBarOutline.beginFill(0x000000);
+        scoreBarOutline.drawRect(0, 0, prefferedWidth, 24);
+        scoreBarOutline.endFill();
+        app.stage.addChild(scoreBarOutline);
+        const scoreBarFill = new PIXI.Graphics();
+        scoreBarFill.beginFill(0x00ff00);
+        scoreBarFill.drawRect(
+          0,
+          0,
+          prefferedWidth * (timeRemaining / 10000),
+          20
+        );
+        scoreBarFill.endFill();
+        app.stage.addChild(scoreBarFill);
       }
 
       function handleMerge(mergeData) {
@@ -411,11 +428,11 @@
         const messages = document.getElementById("messages");
         const winnerId = gameOverData.winner;
         const winnerName = winnerId === playerId ? playerName : opponentName;
-        messages.innerHTML = `Game Over! Winner: ${winnerName}. 
-                                  Scores: ${playerName}: ${
+        messages.innerHTML = `Game Over! Winner: ${winnerName}.
+                                        Scores: ${playerName}: ${
           gameOverData.finalScores[playerId]
-        }, 
-                                  ${opponentName}: ${
+        },
+                                        ${opponentName}: ${
           gameOverData.finalScores[
             Object.keys(gameOverData.finalScores).find((id) => id !== playerId)
           ]
