@@ -1,5 +1,6 @@
 Potential improvements:
 
+- improve visuals, make the game look better :/
 - fix shared types, type narrowing for message related stuff on server e.g. `function createMessage(type: MessageType, payload: any) {...}`
 - export server types to client
 - proper message queue for the server and maybe client too
