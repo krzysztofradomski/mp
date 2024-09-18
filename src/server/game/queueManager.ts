@@ -3,20 +3,7 @@ import WebSocket from "ws";
 import { Player } from "../types";
 
 export class QueueManager {
-  private queue: Player[] = [
-    {
-      id: "1",
-      name: "Player 1",
-      socket: new WebSocket("ws://localhost:3000"),
-      score: 0,
-    },
-    // {
-    //   id: "2",
-    //   name: "Player 2",
-    //   socket: null!,
-    //   score: 0,
-    // },
-  ];
+  private queue: Player[] = [];
 
   addToQueue(player: Player): void {
     this.queue.push(player);

@@ -13,7 +13,7 @@ export class GameManager {
       players: [player1, player2],
       board: createEmptyBoard(),
       lastUpdateTime: Date.now(),
-      endTime: Date.now() + 600000, // Game ends 600 seconds from now
+      endTime: Date.now() + 60000, // Game ends 60 seconds from now
     };
     this.games.set(gameId, game);
     this.playerToGame.set(player1.id, gameId);

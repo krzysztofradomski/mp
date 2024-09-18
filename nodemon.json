@@ -2,6 +2,6 @@
   "restartable": "rs",
   "ignore": [".git", "node_modules/**/node_modules"],
   "verbose": true,
-  "watch": ["index.ts", "src/client/index.ts"],
-  "ext": "js json"
+  "watch": ["index.ts", "src/server/"],
+  "ext": "js, ts"
 }

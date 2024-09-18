@@ -7,7 +7,7 @@
 
 ## Development
 
-To run the app, you need to install both server and client dependencies.
+Note: nodemon seems not to work, need to manually restart server if relevant node files changed. To run the app, you need to install both server and client dependencies.
 Run
 
 ```bash
