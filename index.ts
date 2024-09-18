@@ -14,12 +14,21 @@ const wss = new WebSocket.Server({ server });
 app.use(cors());
 // }
 
-app.use(express.static("public"));
-
 app.use("/assets", express.static("public/assets"));
+
+// Serve react app here
+app.use("/react", express.static("public"));
+
+// Server old version js client here
+app.use("/js", express.static("public/__old"));
 
 wss.on("connection", handleConnection);
 
 server.listen(PORT, () => {
-  console.log(`Server is running on port http://localhost:${PORT}`);
+  console.log(`Node server is running on port http://localhost:${PORT}`);
+  console.log(`WebSocket server is running on ws://localhost:${PORT}`);
+  console.log(`React app is running on http://localhost:${PORT}/react`);
+  console.log(
+    `Js client (early version) is running on http://localhost:${PORT}/js`
+  );
 });
