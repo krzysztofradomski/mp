@@ -1,4 +1,6 @@
-## See the game running at [https://swap-tiles.herokuapp.com/](https://swap-tiles.herokuapp.com/)
+## See the game running at [https://game-test.fly.dev/react](https://game-test.fly.dev/react) or [https://game-test.fly.dev/js](https://game-test.fly.dev/js)
+
+## Note: JS client was an initial version, the React client is the newer one.
 
 ## Running the game:
 
