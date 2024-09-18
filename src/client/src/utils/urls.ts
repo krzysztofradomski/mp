@@ -20,3 +20,8 @@ export const otherTexturesList = [
   { type: "fail-bg", url: `${hostingUrl}/assets/fail-bg.svg` },
   { type: "fail-text", url: `${hostingUrl}/assets/fail-text.svg` },
 ];
+
+export type TextureTypes = {
+  type: string;
+  url: string;
+}[];

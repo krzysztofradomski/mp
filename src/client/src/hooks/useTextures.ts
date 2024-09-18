@@ -1,9 +1,9 @@
 import * as PIXI from "pixi.js";
 import { useState, useEffect } from "react";
 import { PixiTexture } from "../components/game/types";
-import { tileTexturesList } from "../utils/urls";
+import { TextureTypes } from "../utils/urls";
 
-export const useTileTextures = (tileList: typeof tileTexturesList) => {
+export const useTextures = (tileList: TextureTypes) => {
   const [texturesLoaded, setTexturesLoaded] = useState({});
   useEffect(() => {
     const loadTextures = async () => {

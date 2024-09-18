@@ -5,15 +5,7 @@ import { grid } from "../../utils/grid";
 import { Board } from "../../utils/server-types";
 import { PixiTexture } from "./types";
 
-const GameBoard = ({
-  board,
-  tileTexturesLoaded,
-  selectedTile,
-  handleTileDrop,
-  mergeEffect,
-  swapEffect,
-  windowDimensions,
-}: {
+type BoardProps = {
   board: Board;
   tileTexturesLoaded: { [key: string]: PixiTexture };
   selectedTile: [number, number] | null;
@@ -26,7 +18,18 @@ const GameBoard = ({
   mergeEffect: { fromCell: [number, number]; toCell: [number, number] } | null;
   swapEffect: { fromCell: [number, number]; toCell: [number, number] } | null;
   windowDimensions: { width: number; height: number };
-}) => {
+};
+
+const GameBoard = (props: BoardProps) => {
+  const {
+    board,
+    tileTexturesLoaded,
+    selectedTile,
+    handleTileDrop,
+    mergeEffect,
+    swapEffect,
+    windowDimensions,
+  } = props;
   const [tileSize, setTileSize] = useState(0);
   const [padding, setPadding] = useState(0);
   const [draggingTile, setDraggingTile] = useState<{

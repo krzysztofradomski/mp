@@ -1,14 +1,12 @@
 import { Graphics } from "@pixi/react";
 
-const TimerBar = ({
-  timeRemaining,
-  totalTime,
-  windowDimensions,
-}: {
+type TimerBarProps = {
   timeRemaining: number;
   totalTime: number;
   windowDimensions: { width: number; height: number };
-}) => {
+};
+const TimerBar = (props: TimerBarProps) => {
+  const { timeRemaining, totalTime, windowDimensions } = props;
   const percentage = totalTime > 0 ? timeRemaining / totalTime : 0;
 
   return (

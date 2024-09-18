@@ -5,13 +5,7 @@ import GameBoard from "./Board";
 import TimerBar from "./TimerBar";
 import { PixiTexture } from "./types";
 
-const GameWrapper = ({
-  state,
-  tileTexturesLoaded,
-  otherTexturesLoaded,
-  handleTileDrop,
-  windowDimensions,
-}: {
+type GameWrapperProps = {
   state: typeof initialState;
   tileTexturesLoaded: { [key: string]: PixiTexture };
   otherTexturesLoaded: { [key: string]: PixiTexture };
@@ -22,7 +16,16 @@ const GameWrapper = ({
     toCol: number
   ) => void;
   windowDimensions: { width: number; height: number };
-}) => {
+};
+
+const GameWrapper = (props: GameWrapperProps) => {
+  const {
+    state,
+    tileTexturesLoaded,
+    otherTexturesLoaded,
+    handleTileDrop,
+    windowDimensions,
+  } = props;
   const timeRemaining = useGameTimer(state.endTime);
   console.log({
     state,
