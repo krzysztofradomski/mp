@@ -70,6 +70,10 @@ export class MoveProcessor {
       return false;
     }
 
+    if (game.board[toRow][toCol] === null) {
+      return false;
+    }
+
     const rowDiff = Math.abs(fromRow - toRow);
     const colDiff = Math.abs(fromCol - toCol);
     return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
