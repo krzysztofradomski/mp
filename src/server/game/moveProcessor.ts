@@ -48,7 +48,7 @@ export class MoveProcessor {
       game.board[toRow][toCol] = fromItem;
       game.board[fromRow][fromCol] = toItem;
       messageSender.sendSwapEvent(game, move);
-      return true; // We need to update for all moves, including swaps
+      return true;
     }
   }
 

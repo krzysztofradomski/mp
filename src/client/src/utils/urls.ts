@@ -1,5 +1,3 @@
-// for local development
-// const hostingUrl = `http://${window.location.hostname}:3000`;
 export const hostingUrl =
   process.env.NODE_ENV === "development"
     ? `http://${window.location.hostname}:3000`

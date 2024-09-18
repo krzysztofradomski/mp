@@ -14,7 +14,7 @@ export const WS_SERVER_MESSAGE_TYPES = {
 export type WS_SERVER_MSG_TYPE =
   (typeof WS_SERVER_MESSAGE_TYPES)[keyof typeof WS_SERVER_MESSAGE_TYPES];
 
-// same as in the backend
+// same as in the frontend; maybe put into 1 file and the run an export/import script
 export type WS_SERVER_MSG_PAYLOAD = {
   id?: string;
   gameId?: string;
@@ -57,7 +57,6 @@ export type WS_CLIENT_EVENT = {
   type: WS_CLIENT_MSG_TYPE;
 } & WS_CLIENT_MSG_PAYLOAD;
 
-// TODO: properly type the payload
 export function createMessage(
   type: WS_SERVER_MSG_TYPE,
   payload: WS_SERVER_MSG_PAYLOAD

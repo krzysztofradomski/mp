@@ -35,7 +35,6 @@ export interface Move {
   timestamp: number;
 }
 
-// Controller
 export interface IGameController {
   addToQueue(player: Player): void;
   handleMove(gameId: string, move: Move): void;
