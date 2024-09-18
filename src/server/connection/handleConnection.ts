@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { Player } from "../types";
-import { createMessage, MESSAGE_TYPES } from "../messages";
+import { createMessage, WS_SERVER_MESSAGE_TYPES } from "../messages";
 import { GameController } from "../game/index";
 
 const gameController = new GameController();
@@ -21,7 +21,7 @@ export function handleConnection(ws: WebSocket) {
     } catch (error) {
       console.error("Error processing message:", error);
       ws.send(
-        createMessage(MESSAGE_TYPES.ERROR, {
+        createMessage(WS_SERVER_MESSAGE_TYPES.ERROR, {
           message: "Invalid message format or server error",
         })
       );
@@ -47,7 +47,7 @@ export function handleConnection(ws: WebSocket) {
         break;
       default:
         ws.send(
-          createMessage(MESSAGE_TYPES.ERROR, {
+          createMessage(WS_SERVER_MESSAGE_TYPES.ERROR, {
             message: "Unknown message type",
           })
         );
@@ -78,12 +78,14 @@ export function handleConnection(ws: WebSocket) {
         gameController.handleMove(gameId, move);
       } else {
         ws.send(
-          createMessage(MESSAGE_TYPES.ERROR, { message: "Not in a game" })
+          createMessage(WS_SERVER_MESSAGE_TYPES.ERROR, {
+            message: "Not in a game",
+          })
         );
       }
     } else {
       ws.send(
-        createMessage(MESSAGE_TYPES.ERROR, {
+        createMessage(WS_SERVER_MESSAGE_TYPES.ERROR, {
           message: "Player not initialized",
         })
       );
@@ -93,9 +95,9 @@ export function handleConnection(ws: WebSocket) {
   function handleReconnect(data: any) {
     if (data.playerId && gameController.reconnectPlayer(data.playerId, ws)) {
       player = { ...player!, socket: ws };
-      ws.send(createMessage(MESSAGE_TYPES.RECONNECT_SUCCESS, {}));
+      ws.send(createMessage(WS_SERVER_MESSAGE_TYPES.RECONNECT_SUCCESS, {}));
     } else {
-      ws.send(createMessage(MESSAGE_TYPES.RECONNECT_FAILED, {}));
+      ws.send(createMessage(WS_SERVER_MESSAGE_TYPES.RECONNECT_FAILED, {}));
     }
   }
 }

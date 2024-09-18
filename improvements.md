@@ -19,3 +19,4 @@ Potential improvements:
 - improve the game loop and visuals
 - maybe make it look like the psd? noope, too much time
 - improve docker
+- arrange code by feature/domain rather than by type

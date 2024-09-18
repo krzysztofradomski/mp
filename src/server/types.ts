@@ -17,7 +17,7 @@ export type Board = ItemType[][];
 export interface Player {
   id: string;
   name: string;
-  socket: WebSocket;
+  socket: WebSocket | undefined;
   score: number;
 }
 
@@ -25,7 +25,6 @@ export interface Game {
   id: string;
   players: [Player, Player];
   board: Board;
-  lastUpdateTime: number;
   endTime: number;
 }
 

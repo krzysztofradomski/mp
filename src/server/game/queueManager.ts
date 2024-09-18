@@ -1,15 +1,18 @@
-import { createMessage, MESSAGE_TYPES } from "../messages";
-import WebSocket from "ws";
+import { createMessage, WS_SERVER_MESSAGE_TYPES } from "../messages";
 import { Player } from "../types";
 
 export class QueueManager {
   private queue: Player[] = [];
 
   addToQueue(player: Player): void {
-    this.queue.push(player);
-    player.socket.send(
-      createMessage(MESSAGE_TYPES.QUEUE_UPDATE, { position: this.queue.length })
-    );
+    if (player.socket) {
+      this.queue.push(player);
+      player.socket.send(
+        createMessage(WS_SERVER_MESSAGE_TYPES.QUEUE_UPDATE, {
+          position: this.queue.length,
+        })
+      );
+    }
   }
 
   removeFromQueue(playerId: string): void {
