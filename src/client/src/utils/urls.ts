@@ -3,7 +3,7 @@
 export const hostingUrl =
   process.env.NODE_ENV === "development"
     ? `http://${window.location.hostname}:3000`
-    : `http://${window.location.host}`;
+    : `https://${window.location.host}`;
 
 export const tileTexturesList = [
   { type: "red", url: `${hostingUrl}/assets/tile-red.svg` },
