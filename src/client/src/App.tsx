@@ -41,7 +41,12 @@ type Action = {
 //@ts-expect-error - cannot find proper type
 type PixiTexture = PIXI.Texture;
 
-const hostingUrl = `http://${window.location.hostname}:3000`;
+// for local development
+// const hostingUrl = `http://${window.location.hostname}:3000`;
+const hostingUrl =
+  process.env.NODE_ENV === "development"
+    ? `http://${window.location.hostname}:3000`
+    : `http://${window.location.host}`;
 
 const tileTexturesList = [
   { type: "red", url: `${hostingUrl}/assets/tile-red.svg` },
@@ -494,7 +499,11 @@ const Game = () => {
   const otherTexturesLoaded = useTileTextures(otherTexturesList);
 
   const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-  const wsUrl = `${wsProtocol}://${window.location.hostname}:3000/ws`;
+
+  const wsUrl =
+    process.env.NODE_ENV === "development"
+      ? `${wsProtocol}://${window.location.hostname}:3000/ws`
+      : `${wsProtocol}://${window.location.host}/ws`;
   const { sendMessage } = useGameSocket(wsUrl, dispatch);
 
   const handleTileClick = (row: number, col: number) => {

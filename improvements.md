@@ -15,4 +15,6 @@ Potential improvements:
 - react/pixi to v8 when ready, when, if ever have time
 - fix some weird react types
 - simplify the game state and reducer
+- improve the game loop and visuals
 - maybe make it look like the psd? noope, too much time
+- improve docker
